@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { findUserByUsername } from "../api";
 
 export default function LoginScreen({ users, onLogin }) {
   const [step, setStep]           = useState("username"); // "username" | "pin"
@@ -7,16 +8,18 @@ export default function LoginScreen({ users, onLogin }) {
   const [foundUser, setFoundUser] = useState(null);
   const [error, setError]         = useState("");
   const [shake, setShake]         = useState(false);
+  const [checking, setChecking]   = useState(false);
 
   const triggerShake = () => {
     setShake(true);
     setTimeout(() => setShake(false), 500);
   };
 
-  const handleUsername = () => {
-    const u = users.find(
-      (u) => u.username.toLowerCase() === username.trim().toLowerCase()
-    );
+  const handleUsername = async () => {
+    if (!username.trim()) return;
+    setChecking(true);
+    const u = await findUserByUsername(username);
+    setChecking(false);
     if (!u) { setError("Usuario no encontrado"); triggerShake(); return; }
     setFoundUser(u);
     setError("");
@@ -67,7 +70,7 @@ export default function LoginScreen({ users, onLogin }) {
           <h1 style={{
             margin: 0, fontFamily: "'Playfair Display', serif",
             fontSize: 28, color: "#F8FAFC", fontWeight: 900,
-          }}>Mi Tienda</h1>
+          }}>Maciaga </h1>
           <p style={{ margin: "6px 0 0", color: "#64748B", fontSize: 14 }}>
             {step === "username" ? "Ingresa tu usuario" : `Hola, ${foundUser?.name}!`}
           </p>
@@ -98,13 +101,13 @@ export default function LoginScreen({ users, onLogin }) {
                 {error}
               </p>
             )}
-            <button onClick={handleUsername} style={{
+            <button onClick={handleUsername} disabled={checking} style={{
               padding: "15px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #F97316, #EF4444)",
+              background: checking ? "#475569" : "linear-gradient(135deg, #F97316, #EF4444)",
               color: "#fff", fontSize: 16, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit",
+              cursor: checking ? "not-allowed" : "pointer", fontFamily: "inherit",
             }}>
-              Continuar →
+              {checking ? "Buscando..." : "Continuar →"}
             </button>
           </div>
         )}

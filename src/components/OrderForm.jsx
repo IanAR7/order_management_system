@@ -15,7 +15,7 @@ const fieldStyle = {
   color: "#1E293B", transition: "border-color 0.15s",
 };
 
-export default function OrderForm({ users, initialData, onSave, onClose, title }) {
+export default function OrderForm({ users, initialData, onSave, onClose, title, saving }) {
   const workers = users.filter((u) => u.role === "worker");
 
   const [clientName,    setClientName]    = useState(initialData?.clientName    || "");
@@ -36,7 +36,7 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
     (i) => i.name.trim() && Number(i.qty) > 0 && Number(i.price) >= 0
   );
   const total    = validItems.reduce((s, i) => s + Number(i.qty) * Number(i.price), 0);
-  const canSave  = clientName.trim() && validItems.length > 0 && assignedTo;
+  const canSave  = clientName.trim() && validItems.length > 0 && assignedTo && !saving;
 
   const handleSave = () => {
     if (!canSave) return;
@@ -64,7 +64,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
         overflow: "auto", padding: "28px 24px 44px",
         fontFamily: "'DM Sans', sans-serif",
       }}>
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <h2 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: 22, color: "#0F172A" }}>
             {title}
@@ -76,7 +75,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          {/* Nombre del cliente */}
           <div>
             <label style={labelStyle}>Nombre del cliente</label>
             <input
@@ -87,7 +85,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
             />
           </div>
 
-          {/* Asignar a trabajador */}
           <div>
             <label style={labelStyle}>Asignar a</label>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -103,7 +100,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
             </div>
           </div>
 
-          {/* Método de pago */}
           <div>
             <label style={labelStyle}>Método de pago</label>
             <div style={{ display: "flex", gap: 8 }}>
@@ -123,7 +119,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
             </div>
           </div>
 
-          {/* Items */}
           <div>
             <label style={labelStyle}>Productos / Items</label>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -181,7 +176,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
             >+ Agregar otro item</button>
           </div>
 
-          {/* Nota */}
           <div>
             <label style={labelStyle}>Nota (opcional)</label>
             <input
@@ -193,7 +187,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
           </div>
         </div>
 
-        {/* Total + Guardar */}
         <div style={{
           background: "#FFF7ED", borderRadius: 20, padding: "18px 20px", marginTop: 24,
           display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -213,7 +206,7 @@ export default function OrderForm({ users, initialData, onSave, onClose, title }
             fontSize: 15, fontWeight: 700,
             cursor: canSave ? "pointer" : "not-allowed",
             fontFamily: "inherit",
-          }}>Guardar</button>
+          }}>{saving ? "Guardando..." : "Guardar"}</button>
         </div>
       </div>
     </div>

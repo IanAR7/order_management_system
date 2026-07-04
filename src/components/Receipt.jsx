@@ -1,5 +1,5 @@
 import { PAYMENT_METHODS } from "../constants";
-import { formatOrderNum } from "../storage";
+import { formatOrderNum } from "../api";
 
 export default function Receipt({ order }) {
   const pm = PAYMENT_METHODS.find((p) => p.key === order.paymentMethod);
@@ -13,14 +13,14 @@ export default function Receipt({ order }) {
       {/* Encabezado */}
       <div style={{
         textAlign: "center", borderBottom: "2px dashed #E2E8F0",
-        paddingBottom: 16, marginBottom: 16,
+        paddingBottom: 16, marginBottom: 16, 
       }}>
         <div style={{ fontSize: 28, marginBottom: 4 }}>🛍️</div>
-        <p style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>MI TIENDA</p>
+        <p style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>Maciaga</p>
         <p style={{ margin: "6px 0 2px", fontSize: 20, fontWeight: 900, letterSpacing: 2 }}>
           {formatOrderNum(order.orderNum)}
         </p>
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#94A3B8" }}>
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: "black" }}>
           {new Date(order.createdAt).toLocaleString("es-MX", {
             weekday: "long", year: "numeric", month: "long",
             day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -31,11 +31,11 @@ export default function Receipt({ order }) {
       {/* Cliente y método de pago */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-          <span style={{ color: "#94A3B8" }}>CLIENTE</span>
+          <span style={{ color: "black" }}>CLIENTE</span>
           <span style={{ fontWeight: 700 }}>{order.clientName}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-          <span style={{ color: "#94A3B8" }}>PAGO</span>
+          <span style={{ color: "black" }}>PAGO</span>
           <span style={{ fontWeight: 700 }}>{pm?.icon} {pm?.label}</span>
         </div>
       </div>
@@ -47,7 +47,7 @@ export default function Receipt({ order }) {
       }}>
         <div style={{
           display: "flex", justifyContent: "space-between",
-          fontSize: 10, color: "#94A3B8", marginBottom: 8,
+          fontSize: 10, color: "black", marginBottom: 8,
         }}>
           <span>PRODUCTO</span>
           <span>CANT × PRECIO</span>
@@ -81,7 +81,7 @@ export default function Receipt({ order }) {
       {/* Nota */}
       {order.note && (
         <p style={{
-          fontSize: 11, color: "#94A3B8", margin: "10px 0 0",
+          fontSize: 11, color: "black", margin: "10px 0 0",
           borderTop: "1px dashed #E2E8F0", paddingTop: 10,
         }}>
           Nota: {order.note}

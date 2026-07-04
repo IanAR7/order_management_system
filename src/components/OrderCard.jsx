@@ -1,5 +1,5 @@
 import { STATUS, PAYMENT_METHODS } from "../constants";
-import { formatOrderNum } from "../storage";
+import { formatOrderNum } from "../api";
 
 function StatusBadge({ status }) {
   const s = STATUS[status];
@@ -36,7 +36,6 @@ export default function OrderCard({
     onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 16px #0000000A"; e.currentTarget.style.transform = "translateY(0)"; }}
     >
       <div style={{ padding: "18px 20px 14px" }}>
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
           <div>
             <p style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 18, color: "#0F172A" }}>
@@ -53,11 +52,9 @@ export default function OrderCard({
             </p>
           </div>
 
-          {/* Badges */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
             <StatusBadge status={order.status} />
 
-            {/* PAGADO / NO PAGADO */}
             <span onClick={() => isAdmin && onPaymentToggle(order.id)} style={{
               background: order.paid ? "#EAFAF1" : "#F8FAFC",
               color:       order.paid ? "#27AE60" : "#94A3B8",
@@ -70,7 +67,6 @@ export default function OrderCard({
               {order.paid ? "✓ PAGADO" : "✗ NO PAGADO"}
             </span>
 
-            {/* ENVÍO / NO ENVÍO */}
             <span onClick={() => isAdmin && onShippingToggle(order.id)} style={{
               background: order.shipping ? "#EFF6FF" : "#F8FAFC",
               color:       order.shipping ? "#2563EB" : "#94A3B8",
@@ -85,7 +81,6 @@ export default function OrderCard({
           </div>
         </div>
 
-        {/* Método de pago */}
         {pm && (
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 5,
@@ -96,7 +91,6 @@ export default function OrderCard({
           </div>
         )}
 
-        {/* Items */}
         <div style={{ background: "#F8FAFC", borderRadius: 14, padding: "12px 14px", marginBottom: 12 }}>
           {order.items.map((item, i) => (
             <div key={i} style={{
@@ -122,7 +116,6 @@ export default function OrderCard({
           )}
         </div>
 
-        {/* Footer: trabajador asignado + acciones admin */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 13, color: "#64748B" }}>
             👤 <strong style={{ color: "#0F172A" }}>{assigned?.name || "Sin asignar"}</strong>
@@ -145,7 +138,6 @@ export default function OrderCard({
         </div>
       </div>
 
-      {/* Botones de estado */}
       {canAct && (
         <div style={{ borderTop: "1.5px solid #F1F5F9", display: "flex" }}>
           {!isFinished ? (

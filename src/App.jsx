@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { DEFAULT_USERS, STORAGE_KEYS } from "./constants";
-import { loadData, saveData, uid, toDateKey, formatDateLabel } from "./storage";
-import './App.css'
+import {
+  fetchUsers, fetchOrders, createOrder, updateOrder, deleteOrder,
+  loadSession, saveSession, toDateKey, formatDateLabel,
+} from "./api";
 
 import LoginScreen        from "./components/LoginScreen";
 import OrderCard          from "./components/OrderCard";
@@ -10,11 +11,13 @@ import ExportModal        from "./components/ExportModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
 
 export default function App() {
-  const [users]          = useState(DEFAULT_USERS);
-  const [orders,         setOrders]         = useState([]);
-  const [orderCounter,   setOrderCounter]   = useState(0);
-  const [session,        setSession]        = useState(null);
-  const [loading,        setLoading]        = useState(true);
+  const [users,   setUsers]   = useState([]);
+  const [orders,  setOrders]  = useState([]);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [savingOrder, setSavingOrder] = useState(false);
 
   // Modals
   const [showNewOrder,   setShowNewOrder]   = useState(false);
@@ -23,57 +26,89 @@ export default function App() {
   const [deletingOrder,  setDeletingOrder]  = useState(null);
 
   // Filtros y búsqueda
-  const [filterStatus,   setFilterStatus]   = useState("all");
-  const [searchNum,      setSearchNum]      = useState("");
-  const [searchDate,     setSearchDate]     = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchNum,    setSearchNum]    = useState("");
+  const [searchDate,   setSearchDate]   = useState("");
 
   // ── Carga inicial ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const o = loadData(STORAGE_KEYS.orders,  []);
-    const s = loadData(STORAGE_KEYS.session, null);
-    const c = loadData(STORAGE_KEYS.counter, 0);
-    setOrders(o);
-    if (s) setSession(s);
-    setOrderCounter(c);
-    setLoading(false);
+    (async () => {
+      const s = loadSession();
+      const [u, o] = await Promise.all([fetchUsers(), fetchOrders()]);
+      setUsers(u);
+      setOrders(o);
+      if (s) setSession(s);
+      setLoading(false);
+    })();
   }, []);
 
-  // ── Persistencia ──────────────────────────────────────────────────────────
-  const persist = (updated) => {
-    setOrders(updated);
-    saveData(STORAGE_KEYS.orders, updated);
+  // ── Refrescar pedidos manualmente (sin Realtime, el usuario jala para refrescar) ──
+  const refreshOrders = async () => {
+    setRefreshing(true);
+    setErrorMsg("");
+    try {
+      const o = await fetchOrders();
+      setOrders(o);
+    } catch {
+      setErrorMsg("No se pudo conectar. Revisa tu internet.");
+    }
+    setRefreshing(false);
   };
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const handleLogin = (user) => {
-    setSession(user);
-    saveData(STORAGE_KEYS.session, user);
-  };
-  const handleLogout = () => {
-    setSession(null);
-    saveData(STORAGE_KEYS.session, null);
-  };
+  const handleLogin = (user) => { setSession(user); saveSession(user); };
+  const handleLogout = () => { setSession(null); saveSession(null); };
 
-  // ── Handlers de pedidos ───────────────────────────────────────────────────
-  const handleStatusChange   = (id, status) => persist(orders.map((o) => o.id === id ? { ...o, status } : o));
-  const handlePaymentToggle  = (id)         => persist(orders.map((o) => o.id === id ? { ...o, paid: !o.paid } : o));
-  const handleShippingToggle = (id)         => persist(orders.map((o) => o.id === id ? { ...o, shipping: !o.shipping } : o));
-  const handleDelete         = (order)      => { persist(orders.filter((o) => o.id !== order.id)); setDeletingOrder(null); };
-
-  const handleNewOrder = (data) => {
-    const nextNum = orderCounter + 1;
-    setOrderCounter(nextNum);
-    saveData(STORAGE_KEYS.counter, nextNum);
-    persist([
-      { id: uid(), orderNum: nextNum, createdAt: Date.now(), status: "pending", paid: false, shipping: false, ...data },
-      ...orders,
-    ]);
-    setShowNewOrder(false);
+  // ── Handlers de pedidos (todos van a Supabase y luego refrescan la lista local) ──
+  const handleStatusChange = async (id, status) => {
+    try {
+      const updated = await updateOrder(id, { status });
+      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    } catch { setErrorMsg("No se pudo actualizar el pedido."); }
   };
 
-  const handleEditOrder = (data) => {
-    persist(orders.map((o) => o.id === editingOrder.id ? { ...o, ...data } : o));
-    setEditingOrder(null);
+  const handlePaymentToggle = async (id) => {
+    const current = orders.find((o) => o.id === id);
+    try {
+      const updated = await updateOrder(id, { paid: !current.paid });
+      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    } catch { setErrorMsg("No se pudo actualizar el pago."); }
+  };
+
+  const handleShippingToggle = async (id) => {
+    const current = orders.find((o) => o.id === id);
+    try {
+      const updated = await updateOrder(id, { shipping: !current.shipping });
+      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    } catch { setErrorMsg("No se pudo actualizar el envío."); }
+  };
+
+  const handleDelete = async (order) => {
+    try {
+      await deleteOrder(order.id);
+      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+      setDeletingOrder(null);
+    } catch { setErrorMsg("No se pudo eliminar el pedido."); }
+  };
+
+  const handleNewOrder = async (data) => {
+    setSavingOrder(true);
+    try {
+      const created = await createOrder(data);
+      setOrders((prev) => [created, ...prev]);
+      setShowNewOrder(false);
+    } catch { setErrorMsg("No se pudo crear el pedido."); }
+    setSavingOrder(false);
+  };
+
+  const handleEditOrder = async (data) => {
+    setSavingOrder(true);
+    try {
+      const updated = await updateOrder(editingOrder.id, data);
+      setOrders((prev) => prev.map((o) => (o.id === editingOrder.id ? updated : o)));
+      setEditingOrder(null);
+    } catch { setErrorMsg("No se pudo guardar el pedido."); }
+    setSavingOrder(false);
   };
 
   // ── Loading / Login ───────────────────────────────────────────────────────
@@ -83,7 +118,7 @@ export default function App() {
     </div>
   );
 
-  if (!session) return <LoginScreen users={users} onLogin={handleLogin} />;
+  if (!session) return <LoginScreen onLogin={handleLogin} />;
 
   // ── Filtrado ──────────────────────────────────────────────────────────────
   const isAdmin  = session.role === "admin";
@@ -121,7 +156,6 @@ export default function App() {
         borderRadius: "0 0 32px 32px", boxShadow: "0 8px 40px #0F172A44",
       }}>
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          {/* Sesión */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div>
               <p style={{ margin: 0, fontSize: 12, color: "#64748B", fontWeight: 500 }}>Sesión activa</p>
@@ -129,22 +163,29 @@ export default function App() {
                 {isAdmin ? "👑" : "👤"} {session.name}
               </h1>
             </div>
-            <button onClick={handleLogout} style={{
-              background: "#1E293B", border: "1.5px solid #334155", borderRadius: 12,
-              color: "#94A3B8", padding: "9px 18px", cursor: "pointer",
-              fontSize: 13, fontWeight: 600, fontFamily: "inherit",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#EF4444"; e.currentTarget.style.color = "#EF4444"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#334155"; e.currentTarget.style.color = "#94A3B8"; }}
-            >Cerrar sesión</button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={refreshOrders} disabled={refreshing} title="Actualizar pedidos" style={{
+                background: "#1E293B", border: "1.5px solid #334155", borderRadius: 12,
+                color: "#94A3B8", padding: "9px 14px", cursor: refreshing ? "wait" : "pointer",
+                fontSize: 15, fontFamily: "inherit",
+              }}>{refreshing ? "⏳" : "🔄"}</button>
+              <button onClick={handleLogout} style={{
+                background: "#1E293B", border: "1.5px solid #334155", borderRadius: 12,
+                color: "#94A3B8", padding: "9px 18px", cursor: "pointer",
+                fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#EF4444"; e.currentTarget.style.color = "#EF4444"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#334155"; e.currentTarget.style.color = "#94A3B8"; }}
+              >Cerrar sesión</button>
+            </div>
           </div>
 
           {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {[
               { label: "Total",       val: counts.all,     accent: "#F8FAFC" },
-              { label: "En proceso",  val: counts.pending,  accent: "#F97316" },
-              { label: "Completados", val: counts.done,     accent: "#27AE60" },
+              { label: "En proceso",  val: counts.pending, accent: "#F97316" },
+              { label: "Completados", val: counts.done,    accent: "#27AE60" },
             ].map((s) => (
               <div key={s.label} style={{
                 background: "#1E293B", borderRadius: 16, padding: "14px",
@@ -160,12 +201,30 @@ export default function App() {
         </div>
       </div>
 
+      {/* ── Aviso de error ── */}
+      {errorMsg && (
+        <div style={{
+          maxWidth: 640, margin: "16px auto 0", padding: "0 16px",
+        }}>
+          <div style={{
+            background: "#FEE2E2", border: "1.5px solid #FCA5A5", borderRadius: 14,
+            padding: "12px 16px", color: "#DC2626", fontSize: 13, fontWeight: 600,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            ⚠️ {errorMsg}
+            <button onClick={() => setErrorMsg("")} style={{
+              background: "none", border: "none", color: "#DC2626",
+              fontSize: 16, cursor: "pointer",
+            }}>×</button>
+          </div>
+        </div>
+      )}
+
       {/* ── Contenido ── */}
       <div style={{ padding: "20px 16px", maxWidth: 640, margin: "0 auto" }}>
 
         {/* Búsqueda + filtro por día */}
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          {/* Barra de búsqueda */}
           <div style={{ flex: 1, position: "relative" }}>
             <span style={{
               position: "absolute", left: 14, top: "50%",
@@ -194,7 +253,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Selector de día */}
           <select
             value={searchDate}
             onChange={(e) => setSearchDate(e.target.value)}
@@ -244,7 +302,7 @@ export default function App() {
             <p style={{ fontSize: 13, margin: "6px 0 0", color: "#94A3B8" }}>
               {searchNum || searchDate
                 ? "Intenta con otro número, nombre o fecha"
-                : isAdmin ? "Usa el botón + para crear uno" : "Espera a que te asignen un pedido"}
+                : isAdmin ? "Usa el botón + para crear uno, o 🔄 para revisar pedidos nuevos" : "Espera a que te asignen un pedido (toca 🔄 para revisar)"}
             </p>
           </div>
         ) : (
@@ -285,8 +343,8 @@ export default function App() {
       )}
 
       {/* ── Modales ── */}
-      {showNewOrder   && <OrderForm users={users} onSave={handleNewOrder}  onClose={() => setShowNewOrder(false)}  title="Nuevo Pedido"  />}
-      {editingOrder   && <OrderForm users={users} initialData={editingOrder} onSave={handleEditOrder} onClose={() => setEditingOrder(null)} title="Editar Pedido" />}
+      {showNewOrder   && <OrderForm users={users} onSave={handleNewOrder}  onClose={() => setShowNewOrder(false)}  title="Nuevo Pedido"  saving={savingOrder} />}
+      {editingOrder   && <OrderForm users={users} initialData={editingOrder} onSave={handleEditOrder} onClose={() => setEditingOrder(null)} title="Editar Pedido" saving={savingOrder} />}
       {exportingOrder && <ExportModal order={exportingOrder} onClose={() => setExportingOrder(null)} />}
       {deletingOrder  && <DeleteConfirmModal order={deletingOrder} onConfirm={() => handleDelete(deletingOrder)} onClose={() => setDeletingOrder(null)} />}
     </div>

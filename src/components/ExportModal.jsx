@@ -44,7 +44,7 @@ export default function ExportModal({ order, onClose }) {
 
   return (
     <div style={{
-      position: "fixed", inset: 0, background: "#00000088", zIndex: 2000,
+      position: "fixed", inset: 0, background: "#00000088", zIndex: 2000, color: "black",
       display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
     }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{
@@ -53,7 +53,8 @@ export default function ExportModal({ order, onClose }) {
         boxShadow: "0 32px 80px #00000033",
       }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between",
+            alignItems: "center", marginBottom: 20, color: "black" }}>
           <h3 style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontSize: 20 }}>
             Exportar pedido
           </h3>
@@ -64,7 +65,7 @@ export default function ExportModal({ order, onClose }) {
         </div>
 
         {/* Selector de formato */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 24, color: "black",}}>
           {[{ key: "png", label: "📸 Imagen PNG" }, { key: "pdf", label: "📄 PDF" }].map((f) => (
             <button key={f.key} onClick={() => setFormat(f.key)} style={{
               flex: 1, padding: "12px", borderRadius: 14, border: "2px solid",
@@ -78,7 +79,7 @@ export default function ExportModal({ order, onClose }) {
 
         {/* Preview del ticket */}
         <div style={{
-          background: "#F8FAFC", borderRadius: 16, padding: 16,
+          background: "#F8FAFC", borderRadius: 16, padding: 16, color: "black",
           marginBottom: 20, display: "flex", justifyContent: "center", overflow: "hidden",
         }}>
           <div style={{ transform: "scale(0.75)", transformOrigin: "top center" }}>
@@ -92,7 +93,7 @@ export default function ExportModal({ order, onClose }) {
           background: exporting
             ? "#E2E8F0"
             : "linear-gradient(135deg, #F97316, #EF4444)",
-          color:      exporting ? "#94A3B8" : "#fff",
+          color:      "black",
           fontSize: 15, fontWeight: 700,
           cursor: exporting ? "not-allowed" : "pointer",
           fontFamily: "inherit",
@@ -102,7 +103,7 @@ export default function ExportModal({ order, onClose }) {
       </div>
 
       {/* Ticket oculto para capturar */}
-      <div style={{ position: "fixed", left: -9999, top: -9999, zIndex: -1 }}>
+      <div style={{ position: "fixed", color: "black", left: -9999, top: -9999, zIndex: -1 }}>
         <Receipt order={order} />
       </div>
     </div>
