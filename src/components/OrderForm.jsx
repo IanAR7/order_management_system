@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PAYMENT_METHODS } from "../constants";
 import { uid } from "../storage";
+import { formatCurrency } from "../api";
 
 const labelStyle = {
   fontSize: 11, fontWeight: 700, color: "#94A3B8",
@@ -160,7 +161,7 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
                   </div>
                   {item.qty && item.price && Number(item.qty) > 0 && (
                     <p style={{ margin: "8px 0 0", fontSize: 12, color: "#F97316", fontWeight: 700 }}>
-                      Subtotal: ${(Number(item.qty) * Number(item.price)).toFixed(2)}
+                      Subtotal: {formatCurrency(Number(i.qty) * Number(i.price))}
                     </p>
                   )}
                 </div>
@@ -197,7 +198,7 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
             <p style={{
               margin: 0, fontSize: 28, fontWeight: 800, color: "#EA580C",
               fontFamily: "'Playfair Display', serif",
-            }}>${total.toFixed(2)}</p>
+            }}>{formatCurrency(total)}</p>
           </div>
           <button onClick={handleSave} disabled={!canSave} style={{
             padding: "16px 28px", borderRadius: 16, border: "none",

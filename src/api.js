@@ -129,3 +129,10 @@ export const formatDateLabel = (dateKey) =>
   });
 
 export const formatOrderNum = (n) => `#${String(n).padStart(4, "0")}`;
+
+export const formatCurrency = (amount) =>
+  new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+  }).format(amount);

@@ -1,13 +1,14 @@
 import { PAYMENT_METHODS } from "../constants";
 import { formatOrderNum } from "../api";
+import { formatCurrency } from "../api";
 
 export default function Receipt({ order }) {
   const pm = PAYMENT_METHODS.find((p) => p.key === order.paymentMethod);
 
   return (
     <div id="receipt-export" style={{
-      width: 320, background: "#fff",
-      fontFamily: "'DM Mono', 'Courier New', monospace",
+      width: 400, background: "#fff", borderRadius: 16,
+      fontFamily: "Courier New, Courier, monospace",
       padding: "28px 24px", boxSizing: "border-box",
     }}>
       {/* Encabezado */}
@@ -23,20 +24,19 @@ export default function Receipt({ order }) {
         <p style={{ margin: "4px 0 0", fontSize: 11, color: "black" }}>
           {new Date(order.createdAt).toLocaleString("es-MX", {
             weekday: "long", year: "numeric", month: "long",
-            day: "numeric", hour: "2-digit", minute: "2-digit",
+            day: "numeric",
           })}
         </p>
       </div>
 
-      {/* Cliente y método de pago */}
+      {/* Cliente*/}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
           <span style={{ color: "black" }}>CLIENTE</span>
           <span style={{ fontWeight: 700 }}>{order.clientName}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-          <span style={{ color: "black" }}>PAGO</span>
-          <span style={{ fontWeight: 700 }}>{pm?.icon} {pm?.label}</span>
+          {/* método de pago? */}
         </div>
       </div>
 
@@ -60,10 +60,10 @@ export default function Receipt({ order }) {
           }}>
             <span style={{ flex: 1, fontWeight: 600 }}>{item.name}</span>
             <span style={{ color: "#64748B", whiteSpace: "nowrap" }}>
-              {item.qty} × ${item.price}
+              {item.qty} × {formatCurrency(item.price)}
             </span>
             <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
-              ${(item.qty * item.price).toFixed(2)}
+              {formatCurrency(item.qty * item.price)}
             </span>
           </div>
         ))}
@@ -75,7 +75,7 @@ export default function Receipt({ order }) {
         fontSize: 18, fontWeight: 800, marginBottom: 8,
       }}>
         <span>TOTAL</span>
-        <span>${order.total.toFixed(2)}</span>
+        <span>{formatCurrency(order.total)}</span>
       </div>
 
       {/* Nota */}
@@ -111,7 +111,7 @@ export default function Receipt({ order }) {
         </div>
       )}
 
-      <p style={{ textAlign: "center", fontSize: 10, color: "#CBD5E1", marginTop: 20 }}>
+      <p style={{ textAlign: "center", fontSize: 10, color: "black", marginTop: 20 }}>
         ¡Gracias por su compra!
       </p>
     </div>

@@ -14,7 +14,20 @@ export default function ExportModal({ order, onClose }) {
 
       const el     = document.getElementById("receipt-export");
       const canvas = await html2canvas(el, {
-        scale: 2, backgroundColor: "#ffffff", useCORS: true,
+        scale: 3,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          // Fuerza fuentes del sistema en el clon antes de capturar
+          const receipt = clonedDoc.getElementById("receipt-export");
+          if (receipt) {
+            receipt.style.fontFamily = "Courier New, Courier, monospace";
+            receipt.querySelectorAll("*").forEach(el => {
+              el.style.fontFamily = "Courier New, Courier, monospace";
+            });
+          }
+        }
       });
       const slug = order.clientName.replace(/\s+/g, "-");
 
@@ -79,10 +92,11 @@ export default function ExportModal({ order, onClose }) {
 
         {/* Preview del ticket */}
         <div style={{
-          background: "#F8FAFC", borderRadius: 16, padding: 16, color: "black",
-          marginBottom: 20, display: "flex", justifyContent: "center", overflow: "hidden",
+          background: "white", borderRadius: 16,
+          marginBottom: 30, height: 320, overflowY: "auto",
+          display: "flex", justifyContent: "center",
         }}>
-          <div style={{ transform: "scale(0.75)", transformOrigin: "top center" }}>
+          <div style={{ transform: "scale(0.90)", transformOrigin: "top center", flexShrink: 0 }}>
             <Receipt order={order} />
           </div>
         </div>

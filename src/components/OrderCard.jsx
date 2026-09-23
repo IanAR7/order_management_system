@@ -1,5 +1,6 @@
 import { STATUS, PAYMENT_METHODS } from "../constants";
 import { formatOrderNum } from "../api";
+import { formatCurrency } from "../api";
 
 function StatusBadge({ status }) {
   const s = STATUS[status];
@@ -103,7 +104,7 @@ export default function OrderCard({
               </span>
               {showPrice && (
                 <span style={{ fontSize: 13, fontWeight: 700, color: "#F97316" }}>
-                  ${(item.price * item.qty).toFixed(2)}
+                  {formatCurrency(item.price * item.qty)}
                 </span>
               )}
             </div>
@@ -111,7 +112,7 @@ export default function OrderCard({
           {showPrice && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTop: "2px solid #E2E8F0" }}>
               <span style={{ fontWeight: 800, fontSize: 14, color: "#0F172A" }}>Total</span>
-              <span style={{ fontWeight: 800, fontSize: 16, color: "#EA580C" }}>${order.total.toFixed(2)}</span>
+              <span style={{ fontWeight: 800, fontSize: 16, color: "#EA580C" }}>{formatCurrency(order.total)}</span>
             </div>
           )}
         </div>
