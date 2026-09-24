@@ -111,7 +111,9 @@ export default function OrderCard({
           ))}
           {showPrice && (
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTop: "2px solid #E2E8F0" }}>
-              <span style={{ fontWeight: 800, fontSize: 14, color: "#0F172A" }}>Total</span>
+              <span style={{ fontWeight: 800, fontSize: 14, color: "#0F172A" }}>
+                Total ({order.items.reduce((s, i) => s + i.qty, 0)} pzs)
+              </span>
               <span style={{ fontWeight: 800, fontSize: 16, color: "#EA580C" }}>{formatCurrency(order.total)}</span>
             </div>
           )}

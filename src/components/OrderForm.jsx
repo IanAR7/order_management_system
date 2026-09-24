@@ -159,11 +159,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
                       onBlur={(e)  => (e.target.style.borderColor = "#E2E8F0")}
                     />
                   </div>
-                  {item.qty && item.price && Number(item.qty) > 0 && (
-                    <p style={{ margin: "8px 0 0", fontSize: 12, color: "#F97316", fontWeight: 700 }}>
-                      Subtotal: {formatCurrency(Number(i.qty) * Number(i.price))}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>

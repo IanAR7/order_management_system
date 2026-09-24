@@ -60,7 +60,7 @@ export default function Receipt({ order }) {
           }}>
             <span style={{ flex: 1, fontWeight: 600 }}>{item.name}</span>
             <span style={{ color: "#64748B", whiteSpace: "nowrap" }}>
-              {item.qty} × {formatCurrency(item.price)}
+              {item.qty} × ${item.price}
             </span>
             <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
               {formatCurrency(item.qty * item.price)}
@@ -74,7 +74,7 @@ export default function Receipt({ order }) {
         display: "flex", justifyContent: "space-between",
         fontSize: 18, fontWeight: 800, marginBottom: 8,
       }}>
-        <span>TOTAL</span>
+        <span>TOTAL ({order.items.length} items)</span>
         <span>{formatCurrency(order.total)}</span>
       </div>
 
