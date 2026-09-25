@@ -16,6 +16,12 @@ const fieldStyle = {
   color: "#1E293B", transition: "border-color 0.15s",
 };
 
+document.addEventListener("wheel", function(event) {
+  if (document.activeElement.type ==="number") {
+    document.activeElement.blur();
+  }
+});
+
 export default function OrderForm({ users, initialData, onSave, onClose, title, saving }) {
   const workers = users.filter((u) => u.role === "worker");
 
@@ -23,6 +29,12 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
   const [assignedTo,    setAssignedTo]    = useState(initialData?.assignedTo    || workers[0]?.id || "");
   const [note,          setNote]          = useState(initialData?.note          || "");
   const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || "cash");
+  const [shipping,      setShipping]      = useState(initialData?.shipping      || false);
+  const [shippingPrice, setShippingPrice] = useState(initialData?.shippingPrice || "");
+  const [extendedZone,  setExtendedZone]  = useState(initialData?.extendedZone  || false);
+  const [depositPrice, setDepositPrice] = useState(initialData?.depositPrice || "");
+  const EXTENDED_ZONE_COST = 237;
+  
   const [items,         setItems]         = useState(
     initialData?.items?.map((i) => ({ ...i, id: i.id || uid() })) ||
     [{ id: uid(), name: "", qty: "", price: "" }]
@@ -36,7 +48,13 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
   const validItems = items.filter(
     (i) => i.name.trim() && Number(i.qty) > 0 && Number(i.price) >= 0
   );
-  const total    = validItems.reduce((s, i) => s + Number(i.qty) * Number(i.price), 0);
+  
+  const itemsTotal    = validItems.reduce((s, i) => s + Number(i.qty) * Number(i.price), 0);
+  const shippingCost  = shipping && shippingPrice !== "" ? parseFloat(shippingPrice) || 0 : 0;
+  const extendedCost  = shipping && extendedZone ? EXTENDED_ZONE_COST : 0;
+  const depositCost  = paymentMethod === "transfer" && depositPrice !== "" ? parseFloat(depositPrice) || 0 : 0;
+  const total        = itemsTotal + shippingCost + extendedCost + depositCost;
+  
   const canSave  = clientName.trim() && validItems.length > 0 && assignedTo && !saving;
 
   const handleSave = () => {
@@ -45,12 +63,16 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
       clientName: clientName.trim(),
       assignedTo,
       note,
-      paymentMethod,
+      paymentMethod, 
       total,
       items: validItems.map((i) => ({
         id: i.id, name: i.name.trim(),
         qty: Number(i.qty), price: Number(i.price),
       })),
+      shipping,
+      shippingPrice: shippingCost, 
+      extendedZone,
+      depositPrice: depositCost,
     });
   };
 
@@ -105,7 +127,8 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
             <label style={labelStyle}>Método de pago</label>
             <div style={{ display: "flex", gap: 8 }}>
               {PAYMENT_METHODS.map((pm) => (
-                <button key={pm.key} onClick={() => setPaymentMethod(pm.key)} style={{
+                <button key={pm.key} onClick={() => { setPaymentMethod(pm.key); 
+                  if (pm.key !== "transfer") setDepositPrice(""); }} style={{
                   flex: 1, padding: "11px 8px", borderRadius: 14, border: "2px solid",
                   borderColor: paymentMethod === pm.key ? "#6366F1" : "#E2E8F0",
                   background:  paymentMethod === pm.key ? "#EEF2FF" : "#fff",
@@ -118,6 +141,100 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Envío */}
+          <div>
+            <label style={labelStyle}>Envío</label>
+            <div style={{ display: "flex", gap: 8, marginBottom: shipping ? 12 : 0 }}>
+              <button onClick={() => { setShipping(false); setShippingPrice(""); setExtendedZone(false); }} style={{
+                flex: 1, padding: "11px", borderRadius: 14, border: "2px solid",
+                borderColor: !shipping ? "#F97316" : "#E2E8F0",
+                background:  !shipping ? "#FFF7ED" : "#fff",
+                color:       !shipping ? "#F97316" : "#64748B",
+                fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit",
+              }}>✗ Sin envío</button>
+              <button onClick={() => setShipping(true)} style={{
+                flex: 1, padding: "11px", borderRadius: 14, border: "2px solid",
+                borderColor: shipping ? "#2563EB" : "#E2E8F0",
+                background:  shipping ? "#EFF6FF" : "#fff",
+                color:       shipping ? "#2563EB" : "#64748B",
+                fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit",
+              }}>🚚 Con envío</button>
+            </div>
+
+            {shipping && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Precio de envío */}
+                <input
+                  value={shippingPrice}
+                  onChange={(e) => setShippingPrice(e.target.value)}
+                  placeholder="Costo de envío $"
+                  inputMode="decimal" pattern="[0-9.]*"
+                  type="number" min="1"
+                  style={fieldStyle}
+                  onFocus={(e) => (e.target.style.borderColor = "#2563EB")}
+                  onBlur={(e)  => (e.target.style.borderColor = "#E2E8F0")}
+                />
+
+                {/* Zona Extendida */}
+                <button onClick={() => setExtendedZone((v) => !v)} style={{
+                  padding: "11px 16px", borderRadius: 14, border: "2px solid",
+                  borderColor: extendedZone ? "#7C3AED" : "#E2E8F0",
+                  background:  extendedZone ? "#F5F3FF" : "#fff",
+                  color:       extendedZone ? "#7C3AED" : "#64748B",
+                  fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <span>📍 Zona Extendida</span>
+                  <span style={{
+                    fontSize: 12, background: extendedZone ? "#7C3AED" : "#E2E8F0",
+                    color: extendedZone ? "#fff" : "#94A3B8",
+                    borderRadius: 20, padding: "2px 10px",
+                  }}>+$237.00</span>
+                </button>
+
+              </div>
+            )}
+          </div>
+
+          {paymentMethod === "transfer" && (
+            <input
+              value={depositPrice}
+              onChange={(e) => setDepositPrice(e.target.value)}
+              placeholder="Costo de depósito $"
+              inputMode="decimal" pattern="[0-9.]*"
+              type="number" min="1"
+              style={{ ...fieldStyle, marginTop: 10, borderColor: "#6366F1" }}
+              onFocus={(e) => (e.target.style.borderColor = "#6366F1")}
+              onBlur={(e)  => (e.target.style.borderColor = "#6366F1")}
+            />
+          )}
+
+          {/* Desglose */}
+          <div style={{ background: "#EFF6FF", borderRadius: 12, padding: "10px 14px", fontSize: 13 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", color: "#475569", marginBottom: 4 }}>
+              <span>Subtotal productos</span>
+              <span>{formatCurrency(itemsTotal)}</span>
+            </div>
+            {shipping && (
+            <div style={{ display: "flex", justifyContent: "space-between", color: "#2563EB" }}>
+              <span>Envío</span>
+              <span>{formatCurrency(shippingCost)}</span>
+            </div>
+            )}
+            {extendedZone && (
+              <div style={{ display: "flex", justifyContent: "space-between", color: "#7C3AED" }}>
+                <span>Zona Extendida</span>
+                <span>+{formatCurrency(EXTENDED_ZONE_COST)}</span>
+              </div>
+            )}
+            {paymentMethod === "transfer" && (
+              <div style={{ display: "flex", justifyContent: "space-between", color: "#27AE60" }}>
+                <span>Depósito</span>
+                <span>{formatCurrency(depositCost)}</span>
+              </div>
+            )}
           </div>
 
           <div>

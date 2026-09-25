@@ -40,7 +40,7 @@ export default function OrderCard({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
           <div>
             <p style={{ margin: 0, fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 18, color: "#0F172A" }}>
-              Pedido de {order.clientName}
+              {order.clientName}
             </p>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6366F1", fontWeight: 700, letterSpacing: 0.5 }}>
               {formatOrderNum(order.orderNum)}
@@ -56,29 +56,28 @@ export default function OrderCard({
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
             <StatusBadge status={order.status} />
 
-            <span onClick={() => isAdmin && onPaymentToggle(order.id)} style={{
+            <span style={{
               background: order.paid ? "#EAFAF1" : "#F8FAFC",
               color:       order.paid ? "#27AE60" : "#94A3B8",
               border: `1.5px solid ${order.paid ? "#27AE6044" : "#E2E8F0"}`,
               borderRadius: 30, padding: "4px 12px", fontSize: 11, fontWeight: 800,
-              letterSpacing: 0.5, cursor: isAdmin ? "pointer" : "default",
-              display: "inline-flex", alignItems: "center", gap: 4,
-              transition: "all 0.2s", userSelect: "none",
-            }} title={isAdmin ? "Clic para cambiar estado de pago" : ""}>
+              letterSpacing: 0.5, display: "inline-flex", alignItems: "center", gap: 4,
+              userSelect: "none",
+            }}>
               {order.paid ? "✓ PAGADO" : "✗ NO PAGADO"}
             </span>
 
-            <span onClick={() => isAdmin && onShippingToggle(order.id)} style={{
+            <span style={{
               background: order.shipping ? "#EFF6FF" : "#F8FAFC",
               color:       order.shipping ? "#2563EB" : "#94A3B8",
               border: `1.5px solid ${order.shipping ? "#2563EB44" : "#E2E8F0"}`,
               borderRadius: 30, padding: "4px 12px", fontSize: 11, fontWeight: 800,
-              letterSpacing: 0.5, cursor: isAdmin ? "pointer" : "default",
-              display: "inline-flex", alignItems: "center", gap: 4,
-              transition: "all 0.2s", userSelect: "none",
-            }} title={isAdmin ? "Clic para cambiar tipo de entrega" : ""}>
+              letterSpacing: 0.5, display: "inline-flex", alignItems: "center", gap: 4,
+              userSelect: "none",
+            }}>
               {order.shipping ? "🚚 ENVÍO" : "✗ NO ENVÍO"}
             </span>
+            
           </div>
         </div>
 

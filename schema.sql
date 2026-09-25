@@ -61,6 +61,9 @@ insert into users (id, username, name, pin, role) values
 alter table users enable row level security;
 alter table orders enable row level security;
 alter table order_counter enable row level security;
+alter table orders add column if not exists shipping_price numeric not null default 0;
+alter table orders add column if not exists extended_zone boolean not null default false;
+alter table orders add column if not exists deposit_price numeric not null default 0;
 
 create policy "Acceso público a usuarios" on users for select using (true);
 create policy "Acceso público a pedidos" on orders for all using (true) with check (true);

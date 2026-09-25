@@ -61,11 +61,12 @@ export default function App() {
 
   // ── Handlers de pedidos (todos van a Supabase y luego refrescan la lista local) ──
   const handleStatusChange = async (id, status) => {
-    try {
-      const updated = await updateOrder(id, { status });
-      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
-    } catch { setErrorMsg("No se pudo actualizar el pedido."); }
-  };
+  try {
+    const extra = status === "done" ? { paid: true } : {};
+    const updated = await updateOrder(id, { status, ...extra });
+    setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+  } catch { setErrorMsg("No se pudo actualizar el pedido."); }
+};
 
   const handlePaymentToggle = async (id) => {
     const current = orders.find((o) => o.id === id);

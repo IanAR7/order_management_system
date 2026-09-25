@@ -52,6 +52,9 @@ function rowToOrder(row) {
     total: Number(row.total),
     items: row.items,
     createdAt: new Date(row.created_at).getTime(),
+    shippingPrice: Number(row.shipping_price || 0),
+    extendedZone:  row.extended_zone || false,
+    depositPrice: Number(row.deposit_price || 0),
   };
 }
 
@@ -64,7 +67,10 @@ export async function fetchOrders() {
   return data.map(rowToOrder);
 }
 
-export async function createOrder({ clientName, assignedTo, note, paymentMethod, total, items }) {
+export async function createOrder({ 
+  clientName, assignedTo, note, paymentMethod, total, items,
+  shipping, shippingPrice, extendedZone, depositPrice  // ← ¿están estos?
+}) {
   // 1. Obtener el siguiente número de pedido de forma segura (atómico en la DB)
   const { data: numData, error: numError } = await supabase.rpc("next_order_num");
   if (numError) { console.error(numError); throw numError; }
@@ -73,16 +79,19 @@ export async function createOrder({ clientName, assignedTo, note, paymentMethod,
   const { data, error } = await supabase
     .from("orders")
     .insert({
-      order_num: numData,
-      client_name: clientName,
-      assigned_to: assignedTo,
+      order_num:     numData,
+      client_name:   clientName,
+      assigned_to:   assignedTo,
       note,
       payment_method: paymentMethod,
       total,
       items,
-      status: "pending",
-      paid: false,
-      shipping: false,
+      status:         "pending",
+      paid:           false,
+      shipping:       shipping   || false,      // ← ¿está?
+      shipping_price: shippingPrice || 0,       // ← ¿está?
+      extended_zone:  extendedZone  || false,   // ← ¿está?
+      deposit_price:  depositPrice  || 0,       // ← ¿está?
     })
     .select()
     .single();
@@ -101,8 +110,11 @@ export async function updateOrder(id, fields) {
   if (fields.total         !== undefined) payload.total          = fields.total;
   if (fields.items         !== undefined) payload.items          = fields.items;
   if (fields.status        !== undefined) payload.status         = fields.status;
-  if (fields.paid          !== undefined) payload.paid            = fields.paid;
-  if (fields.shipping      !== undefined) payload.shipping        = fields.shipping;
+  if (fields.paid          !== undefined) payload.paid           = fields.paid;
+  if (fields.shipping      !== undefined) payload.shipping       = fields.shipping;
+  if (fields.shippingPrice !== undefined) payload.shipping_price = fields.shippingPrice;
+  if (fields.extendedZone  !== undefined) payload.extended_zone  = fields.extendedZone;
+  if (fields.depositPrice  !== undefined) payload.deposit_price  = fields.depositPrice;
 
   const { data, error } = await supabase
     .from("orders")
@@ -136,3 +148,5 @@ export const formatCurrency = (amount) =>
     currency: "MXN",
     minimumFractionDigits: 2,
   }).format(amount);
+
+  

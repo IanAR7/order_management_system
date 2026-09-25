@@ -69,24 +69,39 @@ export default function Receipt({ order }) {
         ))}
       </div>
 
+      {/* Desglose envío en ticket */}
+      {order.shipping && (
+        <div style={{ borderTop: "1px dashed #E2E8F0", paddingTop: 8, marginTop: 4 }}>
+          {order.shippingPrice > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+              <span style={{ color: "#64748B" }}>Envío</span>
+              <span style={{ fontWeight: 700 }}>{formatCurrency(order.shippingPrice)}</span>
+            </div>
+          )}
+          {order.extendedZone && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+              <span style={{ color: "#64748B" }}>Zona Extendida</span>
+              <span style={{ fontWeight: 700 }}>{formatCurrency(237)}</span>
+            </div>
+          )}
+        </div>
+      )}
+      {/* Desglose transferencia en ticket */}
+      {order.depositPrice > 0 && (
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+          <span style={{ color: "#64748B" }}>Depósito</span>
+          <span style={{ fontWeight: 700 }}>{formatCurrency(order.depositPrice)}</span>
+        </div>
+      )}
+
       {/* Total */}
       <div style={{
         display: "flex", justifyContent: "space-between",
         fontSize: 18, fontWeight: 800, marginBottom: 8,
       }}>
-        <span>TOTAL ({order.items.length} items)</span>
+        <span>TOTAL ({order.items.length})</span>
         <span>{formatCurrency(order.total)}</span>
       </div>
-
-      {/* Nota */}
-      {order.note && (
-        <p style={{
-          fontSize: 11, color: "black", margin: "10px 0 0",
-          borderTop: "1px dashed #E2E8F0", paddingTop: 10,
-        }}>
-          Nota: {order.note}
-        </p>
-      )}
 
       {/* Sellos PAGADO / ENVÍO */}
       {(order.paid || order.shipping) && (
