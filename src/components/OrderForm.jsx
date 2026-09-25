@@ -52,8 +52,11 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
   const itemsTotal    = validItems.reduce((s, i) => s + Number(i.qty) * Number(i.price), 0);
   const shippingCost  = shipping && shippingPrice !== "" ? parseFloat(shippingPrice) || 0 : 0;
   const extendedCost  = shipping && extendedZone ? EXTENDED_ZONE_COST : 0;
-  const depositCost  = paymentMethod === "transfer" && depositPrice !== "" ? parseFloat(depositPrice) || 0 : 0;
-  const total        = itemsTotal + shippingCost + extendedCost + depositCost;
+  const baseTotal   = itemsTotal + shippingCost + extendedCost;
+  const depositCost = paymentMethod === "transfer"
+    ? baseTotal >= 10000 ? Math.ceil(baseTotal * 0.010101) : 100
+    : 0;
+  const total       = baseTotal + depositCost;
   
   const canSave  = clientName.trim() && validItems.length > 0 && assignedTo && !saving;
 
@@ -197,19 +200,6 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
               </div>
             )}
           </div>
-
-          {paymentMethod === "transfer" && (
-            <input
-              value={depositPrice}
-              onChange={(e) => setDepositPrice(e.target.value)}
-              placeholder="Costo de depósito $"
-              inputMode="decimal" pattern="[0-9.]*"
-              type="number" min="1"
-              style={{ ...fieldStyle, marginTop: 10, borderColor: "#6366F1" }}
-              onFocus={(e) => (e.target.style.borderColor = "#6366F1")}
-              onBlur={(e)  => (e.target.style.borderColor = "#6366F1")}
-            />
-          )}
 
           {/* Desglose */}
           <div style={{ background: "#EFF6FF", borderRadius: 12, padding: "10px 14px", fontSize: 13 }}>

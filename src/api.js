@@ -69,7 +69,7 @@ export async function fetchOrders() {
 
 export async function createOrder({ 
   clientName, assignedTo, note, paymentMethod, total, items,
-  shipping, shippingPrice, extendedZone, depositPrice  // ← ¿están estos?
+  shipping, shippingPrice, extendedZone, depositPrice
 }) {
   // 1. Obtener el siguiente número de pedido de forma segura (atómico en la DB)
   const { data: numData, error: numError } = await supabase.rpc("next_order_num");
@@ -88,10 +88,10 @@ export async function createOrder({
       items,
       status:         "pending",
       paid:           false,
-      shipping:       shipping   || false,      // ← ¿está?
-      shipping_price: shippingPrice || 0,       // ← ¿está?
-      extended_zone:  extendedZone  || false,   // ← ¿está?
-      deposit_price:  depositPrice  || 0,       // ← ¿está?
+      shipping:       shipping   || false,   
+      shipping_price: shippingPrice || 0,    
+      extended_zone:  extendedZone  || false,
+      deposit_price:  depositPrice  || 0,
     })
     .select()
     .single();
