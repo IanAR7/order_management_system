@@ -54,7 +54,7 @@ export default function OrderForm({ users, initialData, onSave, onClose, title, 
   const extendedCost  = shipping && extendedZone ? EXTENDED_ZONE_COST : 0;
   const baseTotal   = itemsTotal + shippingCost + extendedCost;
   const depositCost = paymentMethod === "transfer"
-    ? baseTotal >= 10000 ? Math.ceil(baseTotal * 0.010101) : 100
+    ? baseTotal >= 10000 ? Math.ceil(baseTotal * 0.015151) : 100
     : 0;
   const total       = baseTotal + depositCost;
   
